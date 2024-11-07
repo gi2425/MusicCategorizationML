@@ -1,0 +1,35 @@
+import librosa
+import os
+import numpy as np
+
+path = '/Users/gi/Desktop/research/media/test/'
+
+for file in os.listdir(path):
+    file = os.path.join(path, file)
+
+y, sr = librosa.load(file)
+
+#tempo
+tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
+if isinstance(tempo, (list, tuple, np.ndarray)):
+        tempo = tempo[0]
+print('tempo: {:.2f}'.format(tempo))
+
+#zero crossing rate    
+zcr = librosa.feature.zero_crossing_rate(y)
+print("zcr mean:", zcr.var())
+
+#spectral centroid
+spcent = librosa.feature.spectral_centroid(y=y, sr=sr)
+print("spectral centroid mean:", spcent.mean())
+
+#spectral rolloff
+sproll = librosa.feature.spectral_rolloff(y=y, sr=sr)
+print("spectral rolloff mean:", sproll.mean())
+
+#energy
+rms = librosa.feature.rms(y=y)
+print("rms mean:", rms.mean())
+
+#onset stength
+ons = librosa.onset.onset_strength(y=y)

@@ -1,0 +1,85 @@
+import csv
+import mysql.connector
+import librosa
+import os
+import numpy as np
+
+csvpath = "/Users/gi/Desktop/research/namevaluesclass.csv"
+
+db = mysql.connector.connect(
+    host="127.0.0.1",
+    user="root",
+    password="Gigi13579!",
+    database="test",
+    port="3306"
+)
+
+cursor=db.cursor()
+
+table_name = "rnb"
+tableandclass = 'rnb1'
+
+try:
+    cursor.execute(f'select filepath from {table_name}')
+    allpaths = cursor.fetchall()
+    cursor.nextset()
+except mysql.connector.Error as err:  # catch specific MySQL errors
+        print(f"{err}")
+inputintocsv = []
+
+for i in allpaths:
+    row = []
+    #name
+    try:
+        cursor.execute(f"select name from {table_name} where filepath = '{i[0]}'")
+        name = cursor.fetchall()
+        cursor.nextset()
+        row.append(name)
+        print(i)
+    except mysql.connector.Error as err:  # catch specific MySQL errors
+        print(f"Error with file path {i}: {err}")
+
+    #path
+    original = i[0]
+    modified = f"/Users/gi/Desktop/{original}"
+
+    #load file for librosa
+    y, sr = librosa.load(modified)
+
+    #zcr
+    zcr = librosa.feature.zero_crossing_rate(y)
+    zcrv = zcr.var()
+    row.append(zcrv)
+
+    #spectral centroid mean and variance
+    spcent = librosa.feature.spectral_centroid(y=y, sr=sr)
+    spcentm = spcent.mean()
+    spcentv = spcent.var()
+    row.append(spcentm)
+    row.append(spcentv)
+
+    #spectral rolloff mean and variance
+    sproll = librosa.feature.spectral_rolloff(y=y, sr=sr)
+    sprollm = sproll.mean()
+    sprollv = sproll.var()
+    row.append(sprollm)
+    row.append(sprollv)
+
+    rms = librosa.feature.rms(y=y)
+    rmsm = rms.mean()
+    row.append(rmsm)
+
+    #add table name and class number
+    row.append(tableandclass)
+
+    inputintocsv.append(row)
+
+print(inputintocsv)
+
+
+
+
+
+
+# with open(csvpath, mode='w', newline='') as file:
+#     writer = csv.writer(file)
